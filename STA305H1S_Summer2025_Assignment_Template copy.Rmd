@@ -1,0 +1,586 @@
+---
+title: "Assignment 1"
+author: "Yuxin Sun"
+date: "07/15/2025"
+header-includes:
+spacing: double
+output:
+  pdf_document: default
+  html_document:
+    mathjax: default
+  word_document: default
+always_allow_html: true
+citation_package: natbib
+#bibliography: ["research sources.bib"]     
+biblio-style: "apalike"
+link-citations: true
+nocite: | 
+  @SIRcode, @FB, @OB, @Article,@Code, @MKMK
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Q1(a)
+
+$$
+\text{Let the linear model be: } \quad \mathbf{y} = M_Y \boldsymbol{\beta} + \boldsymbol{\varepsilon}
+$$
+
+- $ \mathbf{y} = [y_1, y_2, \ldots, y_8]^T $: vector of scale readings from the 8 weighings  
+- $ \boldsymbol{\beta} = [\beta_1, \beta_2, \ldots, \beta_7]^T $: true weights of the 7 light objects  
+- $ M_Y $: design matrix under Yates’ procedure indicating object presence in each weighing  
+- $ \boldsymbol{\varepsilon} = [\varepsilon_1, \varepsilon_2, \ldots, \varepsilon_8]^T $: independent random errors, each with mean zero and variance $ \sigma^2 $
+
+
+
+
+$$
+\mathbf{y} = M_Y \boldsymbol{\beta} + \boldsymbol{\varepsilon}
+$$
+
+$$
+\begin{bmatrix}
+y_1 \\
+y_2 \\
+y_3 \\
+y_4 \\
+y_5 \\
+y_6 \\
+y_7 \\
+y_8 \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 1 & 1 & 0 & 0 & 0 & 0 \\
+1 & 0 & 0 & 1 & 1 & 0 & 0 \\
+1 & 0 & 0 & 0 & 0 & 1 & 1 \\
+0 & 1 & 0 & 1 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 & 1 & 0 & 1 \\
+0 & 0 & 1 & 1 & 0 & 0 & 1 \\
+0 & 0 & 1 & 0 & 1 & 1 & 0 \\
+\end{bmatrix}
+\begin{bmatrix}
+\beta_1 \\
+\beta_2 \\
+\beta_3 \\
+\beta_4 \\
+\beta_5 \\
+\beta_6 \\
+\beta_7 \\
+\end{bmatrix}
++
+\begin{bmatrix}
+\varepsilon_1 \\
+\varepsilon_2 \\
+\varepsilon_3 \\
+\varepsilon_4 \\
+\varepsilon_5 \\
+\varepsilon_6 \\
+\varepsilon_7 \\
+\varepsilon_8 \\
+\end{bmatrix}
+$$
+
+---
+
+
+The matrix $ M_Y \in \mathbb{R}^{8 \times 7} $ represents which items are used in each of the eight weighings. Each row corresponds to one weighing, and each column to an object.
+
+---
+```{r}
+matrix_M_Y <- matrix(c(
+  1,1,1,1,1,1,1,
+  1,1,1,0,0,0,0,
+  1,0,0,1,1,0,0,
+  1,0,0,0,0,1,1,
+  0,1,0,1,0,1,0,
+  0,1,0,0,1,0,1,
+  0,0,1,1,0,0,1,
+  0,0,1,0,1,1,0
+), nrow = 8, byrow = TRUE)
+
+# Compute the projection matrix for least squares estimation
+proj_Y <- solve(t(matrix_M_Y) %*% matrix_M_Y) %*% t(matrix_M_Y)
+proj_Y
+```
+
+---
+
+#### Least Squares Estimator
+
+$$
+\hat{\boldsymbol{\beta}} = \left( M_Y^{\top} M_Y \right)^{-1} M_Y^{\top} \mathbf{y}
+$$
+
+This is the ordinary least squares estimator for the object weights under Yates’ method, assuming homoscedastic and independent errors.
+
+
+
+### Q1(b)
+
+$$
+\text{Now consider the modified procedure proposed by Hotelling, where: } \quad \mathbf{y} = M_H \boldsymbol{\beta} + \boldsymbol{\varepsilon}
+$$
+
+- $ \mathbf{y} = [y_1, y_2, \ldots, y_8]^T $: net scale readings from Hotelling's configuration  
+- $ \boldsymbol{\beta} = [\beta_1, \beta_2, \ldots, \beta_7]^T $: true weights of the seven objects  
+- $ M_H $: Hotelling’s design matrix, where the remaining objects are placed in the opposite pan of the balance scale, leading to $\pm 1$ contrast coding  
+- $ \boldsymbol{\varepsilon} = [\varepsilon_1, \varepsilon_2, \ldots, \varepsilon_8]^T $: independent noise terms with zero mean and constant variance
+
+---
+
+#### Matrix Formulation
+
+$$
+\mathbf{y} = M_H \boldsymbol{\beta} + \boldsymbol{\varepsilon}
+$$
+
+$$
+\begin{bmatrix}
+y_1 \\
+y_2 \\
+y_3 \\
+y_4 \\
+y_5 \\
+y_6 \\
+y_7 \\
+y_8 \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 1 & 1 & -1 & -1 & -1 & -1 \\
+1 & -1 & -1 & 1 & 1 & -1 & -1 \\
+1 & -1 & -1 & -1 & -1 & 1 & 1 \\
+-1 & 1 & -1 & 1 & -1 & 1 & -1 \\
+-1 & 1 & -1 & -1 & 1 & -1 & 1 \\
+-1 & -1 & 1 & 1 & -1 & -1 & 1 \\
+-1 & -1 & 1 & -1 & 1 & 1 & -1 \\
+\end{bmatrix}
+\begin{bmatrix}
+\beta_1 \\
+\beta_2 \\
+\beta_3 \\
+\beta_4 \\
+\beta_5 \\
+\beta_6 \\
+\beta_7 \\
+\end{bmatrix}
++
+\begin{bmatrix}
+\varepsilon_1 \\
+\varepsilon_2 \\
+\varepsilon_3 \\
+\varepsilon_4 \\
+\varepsilon_5 \\
+\varepsilon_6 \\
+\varepsilon_7 \\
+\varepsilon_8 \\
+\end{bmatrix}
+$$
+
+---
+
+#### Design Matrix in Hotelling’s Method ($M_H$)
+
+This matrix $ M_H \in \mathbb{R}^{8 \times 7} $ encodes weighings such that the group of objects not included in a weighing are placed in the **opposite pan**. This results in signed contrasts of weights across the scale.
+
+---
+
+#### R Code
+
+```{r}
+# Define design matrix for Hotelling's weighing method
+matrix_M_H <- matrix(c(
+   1, 1, 1, 1, 1, 1, 1,
+   1, 1, 1,-1,-1,-1,-1,
+   1,-1,-1, 1, 1,-1,-1,
+   1,-1,-1,-1,-1, 1, 1,
+  -1, 1,-1, 1,-1, 1,-1,
+  -1, 1,-1,-1, 1,-1, 1,
+  -1,-1, 1, 1,-1,-1, 1,
+  -1,-1, 1,-1, 1, 1,-1
+), nrow = 8, byrow = TRUE)
+
+# Compute least squares estimator matrix
+proj_H <- solve(t(matrix_M_H) %*% matrix_M_H) %*% t(matrix_M_H)
+proj_H
+```
+
+---
+
+#### Least Squares Estimator
+
+$$
+\hat{\boldsymbol{\beta}} = \left( M_H^{\top} M_H \right)^{-1} M_H^{\top} \mathbf{y}
+$$
+
+---
+
+#### Componentwise Form of Estimator
+
+$$
+\begin{aligned}
+\hat{\beta}_1 &= 0.125(y_1 + y_2 + y_3 + y_4 - y_5 - y_6 - y_7 - y_8) \\
+\hat{\beta}_2 &= 0.125(y_1 + y_2 - y_3 - y_4 + y_5 + y_6 - y_7 - y_8) \\
+\hat{\beta}_3 &= 0.125(y_1 + y_2 - y_3 - y_4 - y_5 - y_6 + y_7 + y_8) \\
+\hat{\beta}_4 &= 0.125(y_1 - y_2 + y_3 - y_4 + y_5 - y_6 + y_7 - y_8) \\
+\hat{\beta}_5 &= 0.125(y_1 - y_2 + y_3 - y_4 - y_5 + y_6 - y_7 + y_8) \\
+\hat{\beta}_6 &= 0.125(y_1 - y_2 - y_3 + y_4 + y_5 - y_6 - y_7 + y_8) \\
+\hat{\beta}_7 &= 0.125(y_1 - y_2 - y_3 + y_4 - y_5 + y_6 + y_7 - y_8) \\
+\end{aligned}
+$$
+
+### Q1(c)
+
+We now compare the variance of each estimated weight under the two methods by using their coefficient structures.
+
+---
+
+
+From part (a), the estimator for the first object weight looks like:
+
+$$
+\hat{\beta}_1 = 0.0625\,y_1 + 0.3125(y_2 + y_3 + y_4) - 0.1875(y_5 + y_6 + y_7 + y_8)
+$$
+
+Since all observations are independent with constant variance $\sigma^2$, the variance of $\hat{\beta}_1$ becomes:
+
+$$
+\text{Var}(\hat{\beta}_1) = (0.0625)^2 + 3 \cdot (0.3125)^2 + 4 \cdot (0.1875)^2
+$$
+
+Computing the components:
+
+$$
+0.00390625 + 3 \cdot 0.09765625 + 4 \cdot 0.03515625 = 0.00390625 + 0.29296875 + 0.140625 = 0.4375
+$$
+
+So under Yates’ configuration:
+
+$$
+\text{Var}(\hat{\beta}_i) = 0.4375\,\sigma^2 \quad \text{for all } i
+$$
+
+---
+
+
+From part (b), the estimate for $\beta_1$ is:
+
+$$
+\hat{\beta}_1 = 0.125(y_1 + y_2 + y_3 + y_4 - y_5 - y_6 - y_7 - y_8)
+$$
+
+Each coefficient is either $+0.125$ or $-0.125$, and there are 8 of them. So the variance is:
+
+$$
+\text{Var}(\hat{\beta}_1) = 8 \cdot (0.125)^2 = 8 \cdot 0.015625 = 0.125
+$$
+
+Therefore, under Hotelling’s design:
+
+$$
+\text{Var}(\hat{\beta}_i) = 0.125\,\sigma^2 \quad \text{for all } i
+$$
+### Q1(d)
+- Yates:$\text{Var}(\hat{\beta}_i) = 0.4375\,\sigma^2$
+- Hotelling:$\text{Var}(\hat{\beta}_i) = 0.125\,\sigma^2$
+
+Since $0.125 < 0.4375$, the Hotelling procedure yields smaller variances for the estimated weights, meaning more accurate estimates of the object weights.
+Therefore, if the chemist's goal is to achieve the highest possible precision, then Hotelling’s method is the better choice.
+
+\newpage
+
+### Q2(a)
+
+We are given the yields from six bean plants, with three plants assigned to each fertilizer group:
+
+- Fertilizer A: $[3, 3, 6]$
+- Fertilizer B: $[5, 4, 7]$
+
+To construct the randomization distribution, we assume the labels A and B were randomly assigned. We combine all six values and compute the difference in group means for all possible allocations of 3 to A and 3 to B.
+
+
+```{r}
+# Combine all yields 
+yield_all <- c(3, 3, 6, 5, 4, 7)
+
+# Get all unique ways to select 3 observations for one group
+perm_matrix <- combn(1:6, 3)
+
+# For each combination, calculate difference in group means
+rand_dist <- apply(perm_matrix, 2, function(group_A) {
+  group_B <- setdiff(1:6, group_A)
+  mean(yield_all[group_A]) - mean(yield_all[group_B])
+})
+
+# Display the randomization distribution
+rand_dist
+```
+
+This vector `rand_dist` contains all possible values of the difference in means under the null hypothesis of no treatment effect.
+
+
+
+### Q2(b)
+
+We calculate the p-value using the randomization distribution. We compare the observed difference in means to the null distribution created in part (a).
+
+
+```{r}
+# Observed difference in means
+obs_diff <- mean(c(3, 3, 6)) - mean(c(5, 4, 7))
+
+# Null center (mean of permutation distribution)
+null_mean <- mean(rand_dist)
+
+# Two-sided p-value using permutation definition
+p_val <- mean(abs(rand_dist - null_mean) >= abs(obs_diff - null_mean))
+
+round(p_val, 2)
+```
+
+This p-value represents the proportion of randomized allocations that produce a difference in means as or more extreme than the observed one.
+
+---
+
+### Q2(c)
+
+We compare the above to a two-sample t-test, assuming equal variance.
+
+
+```{r}
+group_A <- c(3, 3, 6)
+group_B <- c(5, 4, 7)
+
+t.test(group_A, group_B, var.equal = TRUE)
+```
+
+This test returns a t-statistic, degrees of freedom, and a p-value under the assumption of normality and equal variances in the two groups.
+
+---
+
+### Q2(d)
+
+The p-value from the randomization test was approximately 0.50, and the p-value from the t-test was approximately 0.37.
+
+Both results suggest that the difference in yields between Fertilizer A and Fertilizer B is not statistically significant.
+
+Thus, both approaches lead to the same practical conclusion:  
+There is no clear evidence that the two fertilizer types result in different yields for bean plants under this experimental setup.
+
+\newpage
+
+### Q3(a)
+
+The sequence of coin flips given is:
+
+```
+T T H T H T T T H T T H
+```
+
+We apply the rule:  
+- If the result is H, assign Drug A to the right eye  
+- If the result is T, assign Drug A to the left eye
+
+Below is the resulting treatment assignment for each subject:
+
+$$
+\begin{array}{|c|c|c|c|}
+\hline
+\textbf{Subject} & \textbf{Left Eye} & \textbf{Right Eye} & \textbf{Coin Flip} \\
+\hline
+1 & A & B & T \\
+2 & A & B & T \\
+3 & B & A & H \\
+4 & A & B & T \\
+5 & B & A & H \\
+6 & A & B & T \\
+7 & A & B & T \\
+8 & A & B & T \\
+9 & B & A & H \\
+10 & A & B & T \\
+11 & A & B & T \\
+12 & B & A & H \\
+\hline
+\end{array}
+$$
+
+---
+
+### Q3(b)
+
+Each flip of the coin is an independent Bernoulli trial with a probability of 0.5. Since there are 12 subjects and hence 12 independent coin flips, the probability of getting this specific sequence of heads and tails is:
+
+$$
+P(\text{exact sequence}) = \left( \frac{1}{2} \right)^{12} = \frac{1}{4096}
+$$
+
+This reflects the uniform probability of any single assignment sequence in this randomization scheme.
+
+---
+
+### Q3(c)
+
+This experiment uses a randomized paired design.
+
+Each subject contributes two experimental units: one left eye and one right eye. The treatment is randomized within each subject using a fair coin flip to decide which eye receives Drug A and which receives Drug B.
+
+This type of design has the following benefits:
+
+- Controls for subject-level variability 
+- Ensures that each treatment is compared within-subject, not between different people
+- Leads to more precise estimation of treatment effects with fewer experimental units
+
+Such within-unit randomization is ideal for paired anatomical structures like eyes, ears, or limbs.
+
+\newpage
+
+### Q4(a)
+
+We want to determine whether the promotional strategy had an effect on hotwing consumption. There are 30 participants, randomly split into two groups:
+
+- Group M: received marketing pitch + beer coupon  
+- Group F: standard customers (no promotion)
+
+Each group contains 15 subjects, and we compare their mean hotwing intake.
+
+The number of possible group assignments is:
+
+$$
+\binom{30}{15} = 155,\!117,\!520
+$$
+
+This makes exhaustive enumeration infeasible. Instead, we approximate the null distribution of the mean difference using Monte Carlo simulation.
+
+
+
+```{r}
+library(resampledata)
+data(Beerwings)
+set.seed(123)
+
+hotwings <- Beerwings$Hotwings
+condition <- Beerwings$Gender
+
+# Observed difference: mean M - mean F
+obs_diff <- mean(hotwings[condition == "M"]) - mean(hotwings[condition == "F"])
+
+# Approximate null distribution
+n_iter <- 250000
+simulated_diffs <- numeric(n_iter)
+
+for (i in 1:n_iter) {
+  sampled <- sample(30, 15)
+  simulated_diffs[i] <- mean(hotwings[sampled]) - mean(hotwings[-sampled])
+}
+
+# Monte Carlo p-value (two-sided)
+p_val <- (sum(abs(simulated_diffs) >= abs(obs_diff)) + 1) / (n_iter + 1)
+round(p_val, 4)
+```
+
+---
+
+### Q4(b)
+
+This is an experiment, not an observational study.
+
+Participants were randomly assigned to the treatment (promotion) or control (no promotion) groups. The researcher directly controlled group membership, which satisfies the definition of an experimental design.
+
+---
+
+### Q4(c)
+
+We now perform a two-sample t-test to test the same hypothesis using traditional methods.
+
+
+```{r}
+t.test(Hotwings ~ Gender, data = Beerwings, var.equal = TRUE)
+```
+
+---
+
+####️ Assumptions:
+
+Both tests rely on:
+
+- Independent observations  
+- Only systematic difference is the treatment (due to randomization)
+
+T-test also assumes:
+
+- Normality (or large sample size)  
+- Equal population variances in both groups
+
+---
+
+#### Result
+
+The p-value from Monte Carlo simulation was approximately 0.0021, and the t-test p-value was about 0.0015.
+
+Both methods indicate a statistically significant effect. The promotion increased hotwing consumption.
+
+---
+
+### Q4(d)
+
+We now test whether the promotion also affected beer consumption.
+#### Normality:
+
+```{r}
+beer_data <- Beerwings$Beer
+
+qqnorm(beer_data[condition == "M"], main = "QQ Plot - Group M")
+qqline(beer_data[condition == "M"])
+
+qqnorm(beer_data[condition == "F"], main = "QQ Plot - Group F")
+qqline(beer_data[condition == "F"])
+```
+
+Visual inspection reveals departures from normality, suggesting a randomization test may be preferable over a t-test.
+
+#### Randomization Test (Beer)
+
+```{r}
+set.seed(123)
+
+obs_diff_beer <- mean(beer_data[condition == "M"]) - mean(beer_data[condition == "F"])
+
+sim_beer <- numeric(n_iter)
+
+for (i in 1:n_iter) {
+  group_A <- sample(30, 15)
+  sim_beer[i] <- mean(beer_data[group_A]) - mean(beer_data[-group_A])
+}
+
+pval_beer <- (sum(abs(sim_beer) >= abs(obs_diff_beer)) + 1) / (n_iter + 1)
+round(pval_beer, 4)
+```
+
+---
+
+#### Result
+
+The Monte Carlo p-value for beer consumption is approximately 0.0628.
+
+This result is not statistically significant at the 5% level. We didn't find convincing evidence that the promotion impacted beer consumption.
+
+---
+
+### Q4(e)
+
+If the researcher instead recruited 40 participants, assigning 30 to group M and 10 to group F, the total number of possible treatment allocations is:
+
+$$
+\binom{40}{30} = \binom{40}{10} = 847,\!660,\!528
+$$
+
+This number grows rapidly with sample size imbalance, which is why simulation-based inference is practical in randomized experiments.
+
